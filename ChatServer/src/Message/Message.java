@@ -13,7 +13,7 @@ public class Message implements java.io.Serializable {
 
     //message types enum
     public static enum Message_Type {
-        None, Connect, GroupCreated,GetOldUsers, GetOldGroups,  Name, RivalConnected, Color, Turn, Text, Movement, Score, Result
+        None, Connect, GroupCreated, GetOldUsers, GetOldGroups, ClientDisconnect, SendGroupMessage, SendGroupName, GetMessage, SendUserName, SendUserMessage, File
     }
     //message type
     public Message_Type type;
@@ -23,4 +23,5 @@ public class Message implements java.io.Serializable {
     public Message(Message_Type t) {
         this.type = t;
     }
+
 }

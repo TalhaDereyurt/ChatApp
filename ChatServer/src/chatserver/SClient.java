@@ -10,6 +10,7 @@ package chatserver;
  * @author talha
  */
 import Message.Message;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -29,6 +30,7 @@ public class SClient {
     Listen listenThread; // thread for listening from client
     SClient rival;
     public boolean paired = false;
+    public String getMessageUserName = "";
 
     public SClient(Socket gelenSoket, int id) {
         this.soket = gelenSoket;
@@ -94,8 +96,57 @@ public class SClient {
                             }
                             Server.Groups.add(received.content.toString());
                             break;
+                        case SendGroupName:
+                            String msgName = received.content.toString();
+                            for (int i = 0; i < Server.Clients.size(); i++) {
+                                Server.Send(Server.Clients.get(i), received);
+                            }
+                            break;
+                        case SendGroupMessage:
+                            Message msg = new Message(Message.Message_Type.SendGroupMessage);
+                            msg.content = TheClient.name + ": " + received.content.toString();
+                            for (int i = 0; i < Server.Clients.size(); i++) {
+                                Server.Send(Server.Clients.get(i), msg);
+                            }
+                            break;
+                        case SendUserName:
+                            String msgUserName = received.content.toString();
+                            getMessageUserName = msgUserName;
+                            Message msgg = new Message(Message.Message_Type.SendUserName);
+                            msgg.content = TheClient.name;
+                            for (int i = 0; i < Server.Clients.size(); i++) {
+                                if (Server.Clients.get(i).name.equals(getMessageUserName)) {
+                                    Server.Send(Server.Clients.get(i), msgg);
+                                }
+                            }
+                            break;
+                        case SendUserMessage:
+                            for (int i = 0; i < Server.Clients.size(); i++) {
+                                if (Server.Clients.get(i).name.equals(getMessageUserName)) {
+                                    Server.Send(Server.Clients.get(i), received);
+                                }
+                            }
+                            break;
+                        case ClientDisconnect:
+                            String user = received.content.toString();
+                            int removeInx = -1;
+                            for (int i = 0; i < Server.Clients.size(); i++) {
+                                if (!Server.Clients.get(i).name.equals(user)) {
+                                    Server.Send(Server.Clients.get(i), received);
+                                } else {
+                                    removeInx = i;
+                                }
+                            }
+                            Server.Clients.remove(removeInx);
+                            break;
+                        case File:
+
+                            break;
                     }
 
+                } catch (EOFException ex) {
+                    // Handle end of stream gracefully (e.g., close the connection)
+                    break;
                 } catch (IOException ex) {
                     Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
                     //if client closed, remove from list

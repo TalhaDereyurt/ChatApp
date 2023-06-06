@@ -7,6 +7,7 @@ package App;
 
 import Message.Message;
 import chatclient.Client;
+import java.util.ArrayList;
 import javax.swing.DefaultListModel;
 
 /**
@@ -18,15 +19,40 @@ public class ChatApp extends javax.swing.JFrame {
     /**
      * Creates new form ChatScreen
      */
+    public int isUser = 0; // 0 group , 1 user
     public DefaultListModel userModel = new DefaultListModel();
     public DefaultListModel groupModel = new DefaultListModel();
     public static ChatApp myApp;
+    public ArrayList<String> userArray = new ArrayList();
+    public ArrayList<String> userMessageArray = new ArrayList();
+    public ArrayList<String> groupArray = new ArrayList();
+    public ArrayList<String> groupMessageArray = new ArrayList();
+    public String getMessageGroupName = "";
+    public String getMessageUserName = "";
 
     public ChatApp() {
         initComponents();
         myApp = this;
         jlist_activeUsers.setModel(userModel);
         jlist_activeGroups.setModel(groupModel);
+    }
+
+    public int checkUserList(String name) {
+        for (int i = 0; i < userArray.size(); i++) {
+            if (userArray.get(i).equals(name)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int checkGroupList(String name) {
+        for (int i = 0; i < groupArray.size(); i++) {
+            if (groupArray.get(i).equals(name)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -59,7 +85,15 @@ public class ChatApp extends javax.swing.JFrame {
         setMaximumSize(new java.awt.Dimension(610, 450));
         setMinimumSize(new java.awt.Dimension(610, 450));
         setPreferredSize(new java.awt.Dimension(610, 450));
-        getContentPane().setLayout(new java.awt.GridLayout());
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
+        getContentPane().setLayout(new java.awt.GridLayout(1, 0));
 
         pnl_main.setBackground(new java.awt.Color(204, 255, 204));
         pnl_main.setMaximumSize(new java.awt.Dimension(600, 400));
@@ -139,6 +173,11 @@ public class ChatApp extends javax.swing.JFrame {
 
         btn_startUserChat.setText("Lets Chat");
         btn_startUserChat.setEnabled(false);
+        btn_startUserChat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_startUserChatActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnl_userChatLayout = new javax.swing.GroupLayout(pnl_userChat);
         pnl_userChat.setLayout(pnl_userChatLayout);
@@ -186,6 +225,11 @@ public class ChatApp extends javax.swing.JFrame {
 
         btn_startGroupChat.setText("Lets Chat");
         btn_startGroupChat.setEnabled(false);
+        btn_startGroupChat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_startGroupChatActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnl_groupChatLayout = new javax.swing.GroupLayout(pnl_groupChat);
         pnl_groupChat.setLayout(pnl_groupChatLayout);
@@ -285,8 +329,6 @@ public class ChatApp extends javax.swing.JFrame {
         txtb_userName.setEnabled(false);
         txtb_createGroup.setEnabled(true);
         Client.Start("localhost", 2000);
-
-
     }//GEN-LAST:event_btn_connectActionPerformed
 
     private void btn_createGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_createGroupActionPerformed
@@ -294,7 +336,48 @@ public class ChatApp extends javax.swing.JFrame {
         Message msg = new Message(Message.Message_Type.GroupCreated);
         msg.content = txtb_createGroup.getText();
         Client.Send(msg);
+        txtb_createGroup.setText("");
     }//GEN-LAST:event_btn_createGroupActionPerformed
+
+    private void btn_startUserChatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_startUserChatActionPerformed
+        // TODO add your handling code here:
+        String chatPerson = jlist_activeUsers.getSelectedValue();
+        ChatScreen newFrame = new ChatScreen();
+        newFrame.setVisible(true);
+        newFrame.lbl_chat.setText(chatPerson);
+        newFrame.isUser = 1;
+        int result = checkUserList(chatPerson);
+        if (result == -1) {
+            newFrame.txta_chat.setText("");
+        } else {
+            newFrame.txta_chat.setText(userMessageArray.get(result));
+        }
+    }//GEN-LAST:event_btn_startUserChatActionPerformed
+
+    private void btn_startGroupChatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_startGroupChatActionPerformed
+        // TODO add your handling code here:
+        String chatGroup = jlist_activeGroups.getSelectedValue();
+        ChatScreen newFrame = new ChatScreen();
+        newFrame.setVisible(true);
+        newFrame.lbl_chat.setText(chatGroup);
+        newFrame.isUser = 0;
+        int result = checkGroupList(chatGroup);
+        if (result == -1) {
+            newFrame.txta_chat.setText("");
+        } else {
+            newFrame.txta_chat.setText(groupMessageArray.get(result));
+        }
+    }//GEN-LAST:event_btn_startGroupChatActionPerformed
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_formWindowClosed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        // TODO add your handling code here:
+        Client.Stop();
+
+    }//GEN-LAST:event_formWindowClosing
 
     /**
      * @param args the command line arguments
